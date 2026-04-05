@@ -10,7 +10,7 @@ class AccountInfo:
 
     def __init__(self, client: schwabdev.Client):
         self.client = client
-        acc = client.account_linked().json()
+        acc = client.linked_accounts().json()
         self.account = acc[0]["accountNumber"]
         self.account_hash = acc[0]["hashValue"]
 

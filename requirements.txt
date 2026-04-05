@@ -1,0 +1,15 @@
+schwabdev
+websockets
+requests
+tk
+nicegui
+nicegui-highcharts
+pywhatkit
+pytest_mock
+lightweight-charts
+scipy
+python-dotenv
+pandas
+anthropic
+openai
+google-genai

@@ -1,13 +1,14 @@
+import datetime
 from enum import Enum
 
 
-class ContractType(Enum):
+class OptionContractType(Enum):
     CALL = "CALL"
     PUT = "PUT"
 
 
-class Contract:
-    putCall: ContractType = None
+class OptionContract:
+    putCall: OptionContractType = None
     bid: float = 0
     ask: float = 0
     symbol = ""
@@ -15,6 +16,8 @@ class Contract:
     experationDate = ""
     daysToExiration = 0
     putCall = ""
+    sigma_sum = 0
+    current_datetime = None
 
     def __init__(
         self,
@@ -23,7 +26,7 @@ class Contract:
         for key, value in kwargs.items():
             # print(key, value)
             setattr(self, key, value)
-
+        self.current_datetime = datetime.datetime.now()
 
     def get_symbol(self):
         split = self.symbol.split(" ")
@@ -56,3 +59,62 @@ class Contract:
         keys = input_contract.columns.values.tolist()
         dictionary = dict(zip(keys, values[0]))
         return dictionary
+
+    def to_list(self):
+        return [
+            self.current_datetime,
+            self.putCall,
+            self.symbol,
+            self.description,
+            self.exchangeName,
+            self.bid,
+            self.ask,
+            self.last,
+            self.mark,
+            self.bidSize,
+            self.askSize,
+            self.bidAskSize,
+            self.lastSize,
+            self.highPrice,
+            self.lowPrice,
+            self.openPrice,
+            self.closePrice,
+            self.totalVolume,
+            self.tradeTimeInLong,
+            self.quoteTimeInLong,
+            self.netChange,
+            self.volatility,
+            self.delta,
+            self.gamma,
+            self.theta,
+            self.vega,
+            self.rho,
+            self.openInterest,
+            self.timeValue,
+            self.theoreticalOptionValue,
+            self.theoreticalVolatility,
+            self.optionDeliverablesList,
+            self.strikePrice,
+            self.expirationDate,
+            self.daysToExpiration,
+            self.expirationType,
+            self.lastTradingDay,
+            self.multiplier,
+            self.settlementType,
+            self.deliverableNote,
+            self.percentChange,
+            self.markChange,
+            self.markPercentChange,
+            self.intrinsicValue,
+            self.extrinsicValue,
+            self.optionRoot,
+            self.exerciseType,
+            self.high52Week,
+            self.low52Week,
+            self.pennyPilot,
+            self.inTheMoney,
+            self.mini,
+            self.nonStandard,
+            self.experationDate,
+            self.sigma_sum,
+        ]

@@ -1,5 +1,0 @@
-schwabdev
-requests
-streamlit
-
-dotenv
