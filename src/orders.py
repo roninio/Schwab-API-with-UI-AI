@@ -39,6 +39,7 @@ class SubmitOrders:
         price,
         instruction,
         quantity=1,
+        asset_type: str = "OPTION",
     ):
 
         # place order
@@ -54,7 +55,7 @@ class SubmitOrders:
                     "quantity": quantity,
                     "instrument": {
                         "symbol": "{symbol}".format(symbol=symbol),
-                        "assetType": "OPTION",
+                        "assetType": asset_type,
                     },
                 }
             ],

@@ -61,6 +61,15 @@ SKILLS: list[SkillDefinition] = [
         input_hint="",
         tool_names=["get_account_orders"],
     ),
+    SkillDefinition(
+        name="buy_stock",
+        label="Buy Stock",
+        icon="trending_up",
+        description="Place a limit order to buy shares (enable Buy Stock in Trading tools first).",
+        prompt_template="Buy shares: ticker ",
+        input_hint="e.g. AAPL — then say quantity and limit price (e.g. 10 shares at 185.50)",
+        tool_names=["buy_stock"],
+    ),
 ]
 
 # Lookup by name

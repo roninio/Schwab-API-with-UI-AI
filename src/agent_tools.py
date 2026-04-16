@@ -241,6 +241,7 @@ def _tool_preview_order(
     instruction: str,
     quantity: int,
     price: float,
+    asset_type: str = "OPTION",
 ) -> Any:
     order = {
         "orderType": "LIMIT",
@@ -252,7 +253,7 @@ def _tool_preview_order(
             {
                 "instruction": instruction,
                 "quantity": quantity,
-                "instrument": {"symbol": symbol, "assetType": "OPTION"},
+                "instrument": {"symbol": symbol, "assetType": asset_type},
             }
         ],
     }
@@ -273,6 +274,7 @@ def _tool_buy_option(symbol: str, quantity: int, price: float) -> dict:
         price=price,
         instruction="BUY_TO_OPEN",
         quantity=quantity,
+        asset_type="OPTION",
     )
     return {"order_id": order_id, "status": "submitted", "action": "BUY_TO_OPEN"}
 
@@ -287,8 +289,39 @@ def _tool_sell_option(symbol: str, quantity: int, price: float) -> dict:
         price=price,
         instruction="SELL_TO_OPEN",
         quantity=quantity,
+        asset_type="OPTION",
     )
     return {"order_id": order_id, "status": "submitted", "action": "SELL_TO_OPEN"}
+
+
+def _tool_buy_stock(symbol: str, quantity: int, price: float) -> dict:
+    client = get_client()
+    orders = SubmitOrders(client)
+    account_hash = _account_hash()
+    order_id = orders.place_order(
+        symbol=symbol,
+        account_hash=account_hash,
+        price=price,
+        instruction="BUY",
+        quantity=quantity,
+        asset_type="EQUITY",
+    )
+    return {"order_id": order_id, "status": "submitted", "action": "BUY", "asset_type": "EQUITY"}
+
+
+def _tool_sell_stock(symbol: str, quantity: int, price: float) -> dict:
+    client = get_client()
+    orders = SubmitOrders(client)
+    account_hash = _account_hash()
+    order_id = orders.place_order(
+        symbol=symbol,
+        account_hash=account_hash,
+        price=price,
+        instruction="SELL",
+        quantity=quantity,
+        asset_type="EQUITY",
+    )
+    return {"order_id": order_id, "status": "submitted", "action": "SELL", "asset_type": "EQUITY"}
 
 
 def _tool_cancel_order(order_id: str) -> dict:
@@ -305,6 +338,7 @@ def _tool_replace_order(
     instruction: str,
     quantity: int,
     price: float,
+    asset_type: str = "OPTION",
 ) -> Any:
     order = {
         "orderType": "LIMIT",
@@ -316,7 +350,7 @@ def _tool_replace_order(
             {
                 "instruction": instruction,
                 "quantity": quantity,
-                "instrument": {"symbol": symbol, "assetType": "OPTION"},
+                "instrument": {"symbol": symbol, "assetType": asset_type},
             }
         ],
     }
@@ -570,13 +604,14 @@ ALL_TOOLS: list[ToolDefinition] = [
     ToolDefinition(
         name="preview_order",
         label="Preview Order",
-        description="Preview an order without placing it. Shows estimated cost and impact.",
+        description="Preview an order without placing it. Use asset_type EQUITY with BUY/SELL for stocks; OPTION with BUY_TO_OPEN etc. for options.",
         category="Account Info",
         params=[
-            ToolParam("symbol", "string", "Full OCC option symbol or stock ticker"),
-            ToolParam("instruction", "string", "BUY_TO_OPEN, SELL_TO_OPEN, BUY_TO_CLOSE, or SELL_TO_CLOSE", enum=["BUY_TO_OPEN", "SELL_TO_OPEN", "BUY_TO_CLOSE", "SELL_TO_CLOSE"]),
-            ToolParam("quantity", "integer", "Number of contracts or shares"),
+            ToolParam("symbol", "string", "Stock ticker (e.g. AAPL) or full OCC option symbol"),
+            ToolParam("instruction", "string", "EQUITY: BUY or SELL. OPTION: BUY_TO_OPEN, SELL_TO_OPEN, BUY_TO_CLOSE, SELL_TO_CLOSE", enum=["BUY", "SELL", "BUY_TO_OPEN", "SELL_TO_OPEN", "BUY_TO_CLOSE", "SELL_TO_CLOSE"]),
+            ToolParam("quantity", "integer", "Shares or option contracts"),
             ToolParam("price", "number", "Limit price"),
+            ToolParam("asset_type", "string", "EQUITY for stock, OPTION for options", required=False, enum=["EQUITY", "OPTION"]),
         ],
         fn=_tool_preview_order,
     ),
@@ -625,6 +660,32 @@ ALL_TOOLS: list[ToolDefinition] = [
         enabled_by_default=False,
     ),
     ToolDefinition(
+        name="buy_stock",
+        label="Buy Stock",
+        description="Place a BUY limit order for shares of a stock (EQUITY).",
+        category="Trading",
+        params=[
+            ToolParam("symbol", "string", "Stock ticker, e.g. AAPL"),
+            ToolParam("quantity", "integer", "Number of shares"),
+            ToolParam("price", "number", "Limit price per share"),
+        ],
+        fn=_tool_buy_stock,
+        enabled_by_default=False,
+    ),
+    ToolDefinition(
+        name="sell_stock",
+        label="Sell Stock",
+        description="Place a SELL limit order for shares of a stock (EQUITY).",
+        category="Trading",
+        params=[
+            ToolParam("symbol", "string", "Stock ticker, e.g. AAPL"),
+            ToolParam("quantity", "integer", "Number of shares"),
+            ToolParam("price", "number", "Limit price per share"),
+        ],
+        fn=_tool_sell_stock,
+        enabled_by_default=False,
+    ),
+    ToolDefinition(
         name="cancel_order",
         label="Cancel Order",
         description="Cancel an open order by its order ID.",
@@ -636,14 +697,15 @@ ALL_TOOLS: list[ToolDefinition] = [
     ToolDefinition(
         name="replace_order",
         label="Replace Order",
-        description="Cancel an existing order and replace it with a new one at a different price or quantity.",
+        description="Replace an existing order. Match asset_type to the original order (EQUITY vs OPTION).",
         category="Trading",
         params=[
             ToolParam("order_id", "string", "The Schwab order ID to replace"),
-            ToolParam("symbol", "string", "Full OCC option symbol"),
-            ToolParam("instruction", "string", "BUY_TO_OPEN, SELL_TO_OPEN, BUY_TO_CLOSE, or SELL_TO_CLOSE", enum=["BUY_TO_OPEN", "SELL_TO_OPEN", "BUY_TO_CLOSE", "SELL_TO_CLOSE"]),
-            ToolParam("quantity", "integer", "Number of contracts"),
+            ToolParam("symbol", "string", "Stock ticker or OCC option symbol"),
+            ToolParam("instruction", "string", "EQUITY: BUY or SELL. OPTION: BUY_TO_OPEN, SELL_TO_OPEN, BUY_TO_CLOSE, SELL_TO_CLOSE", enum=["BUY", "SELL", "BUY_TO_OPEN", "SELL_TO_OPEN", "BUY_TO_CLOSE", "SELL_TO_CLOSE"]),
+            ToolParam("quantity", "integer", "Shares or contracts"),
             ToolParam("price", "number", "New limit price"),
+            ToolParam("asset_type", "string", "EQUITY or OPTION", required=False, enum=["EQUITY", "OPTION"]),
         ],
         fn=_tool_replace_order,
         enabled_by_default=False,
