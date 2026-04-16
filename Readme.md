@@ -4,6 +4,12 @@
 
 Python app that uses [schwabdev](https://github.com/tylerebowers/Schwabdev) (Schwab API) with a **NiceGUI** web interface. Browse account data, option chains, price charts, and an AI agent that can call Schwab-related tools.
 
+## Disclaimer
+
+This project is provided **as-is** for **educational and personal experimentation only**. It is **not** financial, investment, legal, or tax advice. Trading and investing involve risk of loss; you are solely responsible for your decisions, your account activity, and for complying with Charles Schwab’s API terms of service, your brokerage agreements, and applicable laws and regulations.
+
+The authors and contributors make **no warranty** regarding accuracy, availability, or fitness for a particular purpose and **disclaim liability** for any losses or damages arising from use of this software. Outputs from the AI agent may be incorrect, incomplete, or outdated—**verify everything** before acting, and do not rely on the agent alone to place or manage trades.
+
 ## Features
 
 - **Account** — balances and positions
