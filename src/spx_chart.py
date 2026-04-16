@@ -9,6 +9,10 @@ import pandas as pd
 
 from src.client import create_client, get_client
 
+# US-style candles: green when close >= open, red when close < open (TradingView-style palette).
+STOCK_CANDLE_UP = "#26a69a"
+STOCK_CANDLE_DOWN = "#ef5350"
+
 
 def _normalize_candle_row(candle: dict[str, Any]) -> dict[str, Any]:
     return {str(k).lower(): v for k, v in candle.items()}
@@ -159,7 +163,16 @@ def highcharts_stock_options() -> dict[str, Any]:
         "chart": {"height": 640},
         "rangeSelector": {"selected": 2},
         "series": [
-            {"type": "candlestick", "name": "GOOG", "id": "goog", "data": ohlc},
+            {
+                "type": "candlestick",
+                "name": "GOOG",
+                "id": "goog",
+                "data": ohlc,
+                "upColor": STOCK_CANDLE_UP,
+                "upLineColor": STOCK_CANDLE_UP,
+                "color": STOCK_CANDLE_DOWN,
+                "lineColor": STOCK_CANDLE_DOWN,
+            },
             {"type": "line", "name": "MA30", "data": ma30, "lineWidth": 1.5, "color": "#2980b9"},
         ],
     }
@@ -408,11 +421,11 @@ def lightweight_charts_payload():
             "type": "Candlestick",
             "data": data_list,
             "options": {
-                "upColor": "#26a69a",
-                "downColor": "#ef5350",
+                "upColor": STOCK_CANDLE_UP,
+                "downColor": STOCK_CANDLE_DOWN,
                 "borderVisible": False,
-                "wickUpColor": "#26a69a",
-                "wickDownColor": "#ef5350",
+                "wickUpColor": STOCK_CANDLE_UP,
+                "wickDownColor": STOCK_CANDLE_DOWN,
             },
         },
         {
@@ -430,7 +443,7 @@ def lightweight_charts_payload():
             .fillna(0.0)
             .to_dict("records"),
             "options": {
-                "color": "#26a69a",
+                "color": STOCK_CANDLE_UP,
                 "priceFormat": {"type": "volume"},
                 "priceScaleId": "",
             },

@@ -12,6 +12,7 @@ from typing import Any, Callable
 from src.client import get_client
 from src.account import AccountInfo
 from src.orders import SubmitOrders
+from src.spx_chart import STOCK_CANDLE_DOWN, STOCK_CANDLE_UP
 
 
 # ---------------------------------------------------------------------------
@@ -381,11 +382,13 @@ def _tool_create_stock_chart(
     candles = body.get("candles", [])
 
     ohlc: list[list] = []
-    vol: list[list] = []
+    vol: list[dict[str, Any]] = []
     for c in candles:
         t = int(c.get("datetime", 0))
-        ohlc.append([t, c["open"], c["high"], c["low"], c["close"]])
-        vol.append([t, c["volume"]])
+        o, h, l, cl = c["open"], c["high"], c["low"], c["close"]
+        ohlc.append([t, o, h, l, cl])
+        bar_color = STOCK_CANDLE_UP if cl >= o else STOCK_CANDLE_DOWN
+        vol.append({"x": t, "y": c["volume"], "color": bar_color})
 
     options: dict[str, Any] = {
         "title": {"text": f"{symbol.upper()} — {period}{period_type[0].upper()}"},
@@ -396,8 +399,17 @@ def _tool_create_stock_chart(
             {"labels": {"align": "right", "x": -3}, "top": "65%", "height": "35%", "offset": 0},
         ],
         "series": [
-            {"type": "candlestick", "name": symbol.upper(), "data": ohlc, "yAxis": 0},
-            {"type": "column",      "name": "Volume",        "data": vol,  "yAxis": 1, "color": "#7cb5ec"},
+            {
+                "type": "candlestick",
+                "name": symbol.upper(),
+                "data": ohlc,
+                "yAxis": 0,
+                "upColor": STOCK_CANDLE_UP,
+                "upLineColor": STOCK_CANDLE_UP,
+                "color": STOCK_CANDLE_DOWN,
+                "lineColor": STOCK_CANDLE_DOWN,
+            },
+            {"type": "column", "name": "Volume", "data": vol, "yAxis": 1},
         ],
     }
 
