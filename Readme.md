@@ -1,3 +1,5 @@
+![AI Trading Agent screenshot](./Screenshot.png)
+
 # Schwab API with UI & AI
 
 Python app that uses [schwabdev](https://github.com/tylerebowers/Schwabdev) (Schwab API) with a **NiceGUI** web interface. Browse account data, option chains, price charts, and an AI agent that can call Schwab-related tools.
