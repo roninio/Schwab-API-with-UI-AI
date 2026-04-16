@@ -18,11 +18,11 @@ _PROVIDERS = {
     "Google Gemini":      "gemini",
 }
 
-_CATEGORY_COLOR = {
-    "Market Data":  "text-blue-700",
-    "Account Info": "text-green-700",
-    "Trading":      "text-red-700",
-    "Skills":       "text-purple-700",
+_CATEGORY_CLASS = {
+    "Market Data":  "agent-cat-market",
+    "Account Info": "agent-cat-account",
+    "Trading":      "agent-cat-trading",
+    "Skills":       "agent-cat-skills",
 }
 
 
@@ -30,14 +30,16 @@ def build_agent_page() -> None:
     agent = TradingAgent()
     agent.set_provider("gemini")
 
-    ui.label("AI Trading Agent").classes("text-h5 mb-2")
+    ui.label("AI Trading Agent").classes("text-h5 mb-2 agent-page-title")
 
     with ui.row().classes("w-full no-wrap gap-4 items-start"):
 
         # ── Sidebar ──────────────────────────────────────────────────────────
-        with ui.card().classes("shrink-0 p-4 gap-2").style("width: 220px; overflow-y: auto; max-height: 80vh"):
+        with ui.card().classes("agent-sidebar shrink-0 p-4 gap-2").style(
+            "overflow-y: auto; max-height: 80vh"
+        ):
 
-            ui.label("Provider").classes("text-subtitle2 font-bold")
+            ui.label("Provider").classes("text-subtitle2 font-bold agent-muted")
 
             _default_provider = "gemini"
             _default_models = TradingAgent.MODELS[_default_provider]
@@ -51,7 +53,7 @@ def build_agent_page() -> None:
                 value=_default_models[0],
                 label="Model",
                 on_change=on_model_change,
-            ).classes("w-full")
+            ).classes("w-full").props("outlined dense dark")
 
             def on_provider_change(e):
                 pkey = _PROVIDERS[e.value]
@@ -68,7 +70,7 @@ def build_agent_page() -> None:
                 value="Google Gemini",
                 label="Provider",
                 on_change=on_provider_change,
-            ).classes("w-full")
+            ).classes("w-full").props("outlined dense dark")
 
             ui.separator()
 
@@ -78,8 +80,8 @@ def build_agent_page() -> None:
                 categories.setdefault(tool.category, []).append(tool)
 
             for category, tools in categories.items():
-                color = _CATEGORY_COLOR.get(category, "")
-                ui.label(category).classes(f"text-caption font-bold mt-2 {color}")
+                cat_cls = _CATEGORY_CLASS.get(category, "agent-cat-default")
+                ui.label(category).classes(f"text-caption font-bold mt-2 {cat_cls}")
 
                 for tool_def in tools:
                     def _make_toggle(tname: str):
@@ -91,32 +93,36 @@ def build_agent_page() -> None:
                         tool_def.label,
                         value=tool_def.enabled_by_default,
                         on_change=_make_toggle(tool_def.name),
-                    ).props("dense")
+                    ).props("dense dark")
                     if not tool_def.enabled_by_default:
-                        sw.classes("text-red-600")
+                        sw.classes("agent-switch-off")
 
             ui.separator()
             ui.button("Clear History", on_click=lambda: (
                 agent.clear_history(), _refresh_chat()
-            ), icon="delete_sweep").classes("w-full mt-2")
+            ), icon="delete_sweep").classes("w-full mt-2").props("outline dense")
 
         # ── Chat area ─────────────────────────────────────────────────────────
         with ui.column().classes("flex-1 min-w-0 gap-2"):
 
             with ui.row().classes("w-full justify-between items-center"):
-                ui.label("Chat").classes("text-subtitle2 text-grey")
+                ui.label("Chat").classes("text-subtitle2 font-bold agent-muted")
                 ui.button("New Chat", icon="add_comment", on_click=lambda: (
                     agent.clear_history(), _refresh_chat()
-                )).props("flat dense")
+                )).props("outline dense").classes("agent-header-btn")
 
-            chat_scroll = ui.scroll_area().classes("w-full border rounded").style("height: 60vh")
+            chat_scroll = (
+                ui.scroll_area()
+                .classes("w-full agent-chat-scroll")
+                .style("height: 60vh")
+            )
             with chat_scroll:
                 messages_col = ui.column().classes("w-full gap-2 p-3")
 
             # Thinking indicator (hidden by default)
             with ui.row().classes("items-center gap-2 hidden") as thinking_row:
                 ui.spinner("dots", size="sm")
-                ui.label("Agent is thinking…").classes("text-caption text-grey")
+                ui.label("Agent is thinking…").classes("text-caption agent-muted")
 
             # ── Skill quick-action chips ──────────────────────────────────
             with ui.row().classes("w-full flex-wrap gap-2 pt-1"):
@@ -135,18 +141,18 @@ def build_agent_page() -> None:
 
                     ui.button(skill.label, icon=skill.icon, on_click=_make_skill_handler(skill)) \
                         .props("outline dense") \
-                        .classes("text-purple-700") \
+                        .classes("agent-skill-btn") \
                         .tooltip(skill.description)
 
             # ── Input row ────────────────────────────────────────────────
             with ui.row().classes("w-full no-wrap gap-2 items-end"):
                 msg_input = (
                     ui.textarea(placeholder="Ask anything, or click a skill above…")
-                    .props("outlined dense autogrow")
+                    .props("outlined dense autogrow dark")
                     .classes("flex-1")
                     .style("max-height: 120px")
                 )
-                send_btn = ui.button("Send", icon="send")
+                send_btn = ui.button("Send", icon="send").props("unelevated")
 
     # ── Message rendering ────────────────────────────────────────────────────
 
@@ -157,18 +163,22 @@ def build_agent_page() -> None:
                 if turn.role == "user":
                     with ui.row().classes("justify-end w-full"):
                         ui.label(turn.text or "").classes(
-                            "bg-blue-100 text-blue-900 rounded-xl px-3 py-2"
+                            "rounded-xl px-3 py-2 agent-user-bubble"
                         ).style("max-width: 75%")
 
                 elif turn.role == "assistant" and turn.text:
                     with ui.row().classes("justify-start w-full"):
-                        with ui.card().classes("rounded-xl px-3 py-2").style("max-width: 75%"):
+                        with ui.card().classes(
+                            "rounded-xl px-3 py-2 agent-assistant-card"
+                        ).style("max-width: 75%"):
                             ui.markdown(turn.text)
 
                 elif turn.role == "assistant" and turn.tool_calls:
                     names = ", ".join(tc["name"] for tc in turn.tool_calls)
                     with ui.row().classes("justify-start w-full"):
-                        ui.label(f"⚙ Calling: {names}").classes("text-caption text-grey-7 italic")
+                        ui.label(f"⚙ Calling: {names}").classes(
+                            "text-caption agent-tool-caption"
+                        )
 
                 elif turn.role == "tool_result":
                     for tr in (turn.tool_results or []):
@@ -176,7 +186,7 @@ def build_agent_page() -> None:
                         if isinstance(result, dict) and result.get("__chart_type__") == "highcharts_stock":
                             with ui.column().classes("w-full gap-1"):
                                 ui.label(f"📈 {result.get('symbol', '')} Chart").classes(
-                                    "text-caption text-purple-7 font-medium"
+                                    "text-caption font-medium agent-chart-cap"
                                 )
                                 ui.highchart(
                                     result["options"],
@@ -186,7 +196,7 @@ def build_agent_page() -> None:
                         else:
                             with ui.row().classes("justify-start w-full"):
                                 ui.label(f"↩ {tr['name']}").classes(
-                                    "text-caption text-blue-5 italic cursor-pointer"
+                                    "text-caption agent-tool-link"
                                 ).tooltip(str(result)[:600])
 
         chat_scroll.scroll_to(percent=1.0)

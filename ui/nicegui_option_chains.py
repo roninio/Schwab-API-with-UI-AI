@@ -110,7 +110,9 @@ def build_option_trade_page(selection_state: dict):
         with order_area:
             ui.label("Selected row(s):").classes("text-weight-medium")
             present = [c for c in columns_to_print if c in created.columns]
-            ui.table.from_pandas(created[present].copy())
+            ui.table.from_pandas(created[present].copy()).classes(
+                "w-full options-table"
+            ).props("dark flat separator=horizontal")
 
     def _render_chain_table():
         chain_table_holder.clear()
@@ -156,7 +158,7 @@ def build_option_trade_page(selection_state: dict):
                 row_key="_rid",
                 selection="multiple",
                 on_select=on_select,
-            ).classes("w-full")
+            ).classes("w-full options-table").props("dark flat separator=horizontal")
 
     async def run_fetch(symbol: str, filter_chains: bool):
         selection_state["stage"] = 0
