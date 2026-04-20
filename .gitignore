@@ -2,3 +2,4 @@ ui/__pycache__/*
 .env
 src/__pycache__/*
 .nicegui/schwab_tokens.db
+logs/
